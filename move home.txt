@@ -1,0 +1,64 @@
+------------------------------------------------------------------
+1. 디스크 포맷 
+
+디스크 이름을 확인 
+$ sudo fdisk -l 
+
+ext4 형식으로 디스크 포맷
+$ sudo mkfs.ext4 [디스크이름]
+ex) 
+$ sudo mkfs.ext4 /dev/sda
+
+------------------------------------------------------------------
+2. /mnt에 home을 복사할 폴더 만들기 
+
+$ sudo mkdir /mnt/[새폴더]
+ex) 
+$ sudo mkdir /mnt/newhome
+
+디스크에 폴더를 마운드 
+$ sudo mount -t ext4 [디스크이름]
+ex)
+$ sudo mount -t ext4 /dev/sda /mnt/newhome
+
+------------------------------------------------------------------
+3.home 폴더를 복사하기 
+home 폴더는 여러가지 숨김 파일들이 많기 때문에 cp 명령으로는 완전히 복사 될 수 없다. 
+따라서, Debian archiving guide:에서 배운것을 사용
+
+home 폴더로 이동
+$ cd /home
+
+복사
+$ find . -depth -print0 | cpio --null --sparse -pvd /mnt/newhome/
+
+------------------------------------------------------------------
+4. 새로운 home과 /home 폴더를 마운트 시키기 
+파티션을 unmount 시키기 
+$ sudo umount /mnt/newhome
+
+새로운 /home을 만들기 위해 백업 하기 
+$ sudo mv /home /home.old
+
+이제 /home이 사라졌기에 새로 만들기 
+$ sudo mkdir /home
+
+아까 만들어 놓은 newhome을 mount 시키기 
+$ sudo mount [디스크이름] /home
+ex)
+$ sudo mount /dev/sda /home
+
+------------------------------------------------------------------
+5. 부팅 설정 
+마지막으로, ubuntu가 부팅 할 때 /home을 찾을수 있게 fstab 파일을 수정 
+$ sudo vi /etc/fstab
+
+마지막 줄에 
+[디스크이름] /home [디스크포맷] nodev,nosuid 0 2
+ex) 
+/dev/sda /home ext4 nodev,nosuid 0 2
+
+를 추가 
+
+재부팅 해보고 잘 작동 되면 home.old는 지워도 된다. 
+$ sudo rm -r /home.old 
